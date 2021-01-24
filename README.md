@@ -10,6 +10,7 @@ Este projeto emprega como recursos básicos:
 * Typescript
 * Eslint
 * Prettier
+* Integração com o github
 
 Além de uma gama de recursos adicionais, que podem ou não serem adicionados ao projeto dependendo da necessidade:
 
@@ -24,8 +25,23 @@ Além de uma gama de recursos adicionais, que podem ou não serem adicionados ao
 ## Configuraçôes básicas
 ---
 
-Primeiramente, crie um 
+Primeiramente, crie um projeto básico de react com typescript utilizando o criador de projetos disponibilizado pela empresa que criou o React:
 
 ```bash
-npm install -g create-react-app
+npx create-react-app project-name --template typescript
+```
+O comando `npx` irá baixar as bibliotecas do criador de projetos e executá-lo em seguida, então não é necessário instalá-lo globalmente. Caso você não possua esse comando instalado em seu sistema, basta executar o comando abaixo:
+
+```bash
+npm install -g npx
+```
+
+Após o comando terminar a sua execução, um diretório novo com o nome que você deu para o projeto será criado, contendo a seguinte hierarquia:
+
+```
+project-name
+|
++-- node_modules (pasta)
++-- public
+|   +-- favicon.icon
 ```
