@@ -2,6 +2,16 @@
 
 Este projeto tem como objetivo apresentar um passo a passo simples e direto de como criar e configurar um ambiente react que possua todos os principais recursos necessários para desenvolvimento de um projeto, seja grande ou pequeno.
 
+## Sumário
+
+1. [Recursos](#Recursos)
+2. [Configurações básicas](#Configurações-básicas)
+    1. [Criação do projeto](#Criação-do-projeto)
+    2. [Configuração do Eslint e do Prettier](#Configuração-do-Eslint-e-do-Prettier)
+    3. [Configurações do Editor](#Configurações-do-Editor)
+    4. [Integração com o Github](#Integração-com-o-Github)
+3. [Integração com Styled Components e Styled System](#Integração-com-Styled-Components-e-Styled-System)
+
 ## Recursos
 
 Este projeto emprega como recursos básicos:
@@ -239,3 +249,157 @@ git push -u origin master
 ```
 
 O repositório será então preenchido pelo conteúdo do seu repositório local e você jã pode começar a personalizar o seu projeto. Como complemento, utilize o arquivo **.gitignore** para definir quais os arquivos e diretórios no projeto não devem ser considerados pelo github e o arquivo **.gitattributes** para definir quais propriedades o github deverá implementar nos arquivos do projeto.
+
+## Integração com Styled Components e Styled System
+
+Existem diversas formas diferentes de implementar estilos em componentes de React, desde arquivos básicos de css até bibliotecas especializadas. Dentre as diferentes opções, a biblioteca **Styled Componentes** se destaca entre as demais por empregar os mesmos recursos de SCSS, como sintáxe de CSS básica e composição relativa de estilos, ao mesmo tempo que permiti o uso das props fornecidas às tags de HTML na composição dos estilos, possibilitando uma alta responsividade e interatividade com os componentes.
+
+```bash
+npm install --save styled-components
+npm install --save-dev @types/styled-components
+```
+
+O exemplo abaixo demonstra alguns dos recursos que essa biblioteca tem a oferecer:
+
+```jsx
+import { FC, ReactElement } from "react";
+
+import styled, { css, ThemeProvider, CSSProperties } from "styled-components";
+
+interface DefaultTheme {
+    breakpoints: number[];
+    variants: Record<string,{
+        color: string;
+        border: string;
+        backgroundColor: string;
+        fontSize: string;
+    }>
+}
+
+enum VARIANTS {
+    PRIMARY: "primary",
+    SECONDARY: "secondary"
+}
+
+const theme: DefaultTheme = {
+    breakpoints: [300, 600, 900, 1200],
+    variants: {
+        [VARIANTS.PRIMARY]: {
+            color: black;
+            border: "1px solid black",
+            backgroundColor: "white",
+            fontSize: "14px"
+        },
+        [VARIANTS.SECONDARY]: {
+            color: white;
+            border: "2px solid grey",
+            backgroundColor: "black",
+            fontSize: "16px"
+        },
+    }
+}
+
+type TButtonProps = {
+    disabled: boolean;
+    variant: VARIANT;
+}
+
+const Button = styled.button<CSSProperties & TButtonProps>`
+    width: max-content;
+    height: 40px;
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    ${({ disabled, variant, theme }) => {
+        if(disabled) return css`
+            background-color: #DDDDDD;
+            border: 2px solid grey;
+        `;
+
+        const { backgroundColor, border } = theme.variants[variant]
+
+        return css`
+            background-color: ${backgroundColor};
+            border: ${border};
+        `;
+    }}
+
+    span {
+        color: ${({ disabled, variant, theme }) => disabled
+            ? "grey"
+            : theme.variants[variant].color};
+        font-family: sans-serif;
+        font-size: ${({ variant, theme }) => theme.variants[variant].fontSize};
+    }
+
+    @media only screen and (max-width: ${({ theme }) => theme.breakpoints[1]}px) {
+        width: 100%;
+    }
+`;
+
+const App: FC = (): ReactElement => {
+    return (
+        <ThemeProvider theme={theme}>
+            <Button disabled variant="primary">
+                <span>Click me</span>
+            </Button>
+        </ThemeProvider>
+    );
+}
+```
+
+Em complemento a essa ferramenta, existe também uma outra biblioteca chamada **Styled System**, que facilita a implementação de atributos básicos de CSS, permitindo passá-los como props ao componente ao invés defini-los manualmente.
+
+```bash
+npm install --save styled-system
+```
+
+```jsx
+import { FC, ReactElement } from "react";
+
+import styled, { CSSProperties } from "styled-components";
+import { Properties } from "csstype";
+
+import {
+    background,
+    border,
+    flexBox,
+    layout,
+    space,
+    typography
+} from "styled-system";
+
+const Button = styled.button<>`
+    ${background}
+    ${border}
+    ${flexBox}
+    ${layout}
+    ${space}
+
+    span {
+        ${typography}
+    }
+`;
+
+const App: FC = (): ReactElement => {
+    return (
+        <Button
+            backgroundColor="white"
+            width="max-content"
+            height="40px"
+            border="1px solid black"
+            padding="40px"
+            display="flex"
+            justify-content="center"
+            align-items="center"
+            color="black"
+            fontFamily="sans-serif"
+            fontSize="14px"
+            >
+            <span>Click me</span>
+        </Button>
+    );
+}
+```
