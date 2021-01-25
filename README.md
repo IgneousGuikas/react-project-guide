@@ -6,11 +6,13 @@ Este projeto tem como objetivo apresentar um passo a passo simples e direto de c
 
 1. [Recursos](#Recursos)
 2. [Configurações básicas](#Configurações-básicas)
-    1. [Criação do projeto](#Criação-do-projeto)
-    2. [Configuração do Eslint e do Prettier](#Configuração-do-Eslint-e-do-Prettier)
-    3. [Configurações do Editor](#Configurações-do-Editor)
-    4. [Integração com o Github](#Integração-com-o-Github)
+2.1. [Criação do projeto](#Criação-do-projeto)
+2.2. [Configuração do Eslint e do Prettier](#Configuração-do-Eslint-e-do-Prettier)
+2.3. [Configurações do Editor](#Configurações-do-Editor)
+2.4. [Integração com o Github](#Integração-com-o-Github)
 3. [Integração com Styled Components e Styled System](#Integração-com-Styled-Components-e-Styled-System)
+4. [Integração com React Router](#Integração-com-React-Router)
+5. [Integração com Redux, Redux-Thunk e Redux-Persist](#Integração-com-Redux,-Redux-Thunk-e-Redux-Persist)
 
 ## Recursos
 
@@ -25,8 +27,7 @@ Além de uma gama de recursos adicionais, que podem ou não serem adicionados ao
 
 * Styled Components e Styled System
 * React Router
-* Redux com Redux-Thunk
-* Redux Persist
+* Redux / Redux-Thunk / Redux Persist
 * Axios
 * Next.js
 * React-hook-form com Yup
@@ -261,8 +262,8 @@ npm install --save-dev @types/styled-components
 
 O exemplo abaixo demonstra alguns dos recursos que essa biblioteca tem a oferecer:
 
-```jsx
-import { FC, ReactElement } from "react";
+```typescript
+import React, { FC, ReactElement } from "react";
 
 import styled, { css, ThemeProvider, CSSProperties } from "styled-components";
 
@@ -356,8 +357,8 @@ Em complemento a essa ferramenta, existe também uma outra biblioteca chamada **
 npm install --save styled-system
 ```
 
-```jsx
-import { FC, ReactElement } from "react";
+```typescript
+import React, { FC, ReactElement } from "react";
 
 import styled, { CSSProperties } from "styled-components";
 import { Properties } from "csstype";
@@ -396,10 +397,75 @@ const App: FC = (): ReactElement => {
             align-items="center"
             color="black"
             fontFamily="sans-serif"
-            fontSize="14px"
-            >
+            fontSize="14px">
             <span>Click me</span>
         </Button>
     );
 }
 ```
+
+## Integração com React Router
+
+A estrutura básica de um projeto de React é conhecida como SPA ou Single Page Application, o que em outras palavras significa que todo o projeto está contido em uma única página de HTML que é servida ao cliente no browser com um único grande bundle de javascript, independente de qual rota a url da aplicação apresente. Para o caso de aplicações pequenas, tal estrutura não é um problema, pois uma simples state-machine já seria o suficiente para separar os seus conteúdos, mas em muitos dos casos são necessárias mais do que algumas páginas para comportar o conteúdo do site como um todo, como por exemplo um site de blog no qual cada entrada da sua timeline renderia uma página isolada, determinada por parâmetros na url.
+
+A biblioteca **React Router** vem com a proposta de remediar esse problema, implementando uma lógica que associa conteúdos específicos da aplicação com valores de rota na url, para então realizar o roteamento entre esses conteúdos dependendo da correspondência vingente na url. O projeto em si continua sendo uma SPA, porém esse processo de roteamento junto às alteração da url dão a impressão de que há de fato uma navegação ocorrendo o site, além de facilitar a separação dos conteúdos.
+
+```bash
+npm install --save react-router-dom
+npm install --save-dev @types/react-router-dom
+```
+
+```typescript
+import React, { FC, ReactElement } from "react";
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route,
+    Link
+    RouteComponentProps
+} from "react-router-dom";
+
+
+const Home: FC = (): ReactElement => {
+    return <h2>Home</h2>;
+}
+
+
+type TParams = {
+    id: string;
+}
+
+const Product: FC = ({ match }: RouteComponentProps<TParams>): ReactElement => {
+    return <h2>This is a page for product with ID: {match.params.id} </h2>;
+}
+
+
+const App: FC = ():ReactElement => {
+    return (
+        <Router>
+            <div>
+                <nav>
+                    <ul>
+                        <li>
+                            <Link to="/">Home</Link>
+                        </li>
+                        <li>
+                            <Link to="/product/1">Produto 1</Link>
+                        </li>
+                        <li>
+                            <Link to="/product/2">Produto 2</Link>
+                        </li>
+                    </ul>
+                </nav>
+
+                <Switch>
+                    <Route path="/" exact component={Home} />
+                    <Route path="/product/:id" component={Product} />
+                </Switch>
+            </div>
+        </Router>
+    );
+}
+```
+
+## Integração com Redux, Redux-Thunk e Redux-Persist
