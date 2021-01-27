@@ -436,7 +436,7 @@ type TParams = {
 }
 
 const Product: FC = ({ match }: RouteComponentProps<TParams>): ReactElement => {
-    return <h2>This is a page for product with ID: {match.params.id} </h2>;
+    return <h2>This is a page for product with ID: {match.params.id}</h2>;
 }
 
 
@@ -469,3 +469,134 @@ const App: FC = ():ReactElement => {
 ```
 
 ## Integração com Redux, Redux-Thunk e Redux-Persist
+
+Dentre os vários desafios que um projeto de React acarreta, gerenciamento de estados é certamente um dos que abrange uma grande gama de possibilidades, envolvendo diversos métodos, diversos conceitos e diversas ferramentas.
+
+Projetos simples com uma hierarquia rasa de componentes normalmente exigem pouco esforço nesse quesito, podendo se sustentar apenas com um componente pai que centralize os estados do projeto e funções de callback sendo passadas para os componentes filhos como props. Já para casos em que a hierarquia do projeto é mais profunda ou que a lógica da aplicação se torne mais complexa, como no caso de um projeto com React Router ou até mesmo com um framework de Next.js, tal estratégia torna-se muito convolucionada, uma vez que a transmissão de informações passa a ter muitos intermediários, exigindo soluções mais sofisticadas como a API de contextos da biblioteca de React, que, como o nome já diz, permite atribuir um contexto sobre um conjunto de dados a uma certa parcela da hierarquia de componentes, tornando-se diretamente acessível de qualquer componente dentro dela. Porém, à medida que o projeto começa a escalar, até mesmo essa abordagem pode vir a se tornar excessivamente complexa. Excesso de informações em um mesmo contexto, gerenciamento de requisições, code-spliting e permanência de dados são problemas comuns nessas situações.
+
+Tendo tudo isso em mente, a biblioteca tratada por esta seção, **Redux**, assim como outras duas bibliotecas auxiliares, **Redux-Thunk** e **Redux-Persist**, procuram solucionar vários dos problemas mencionados, talvez que de uma forma um pouco mais exigente do ponto de vista conceitual, porém com uma maior robusteza e versatilidade em comparação a outras soluções.
+
+### Redux
+
+Trata-se de um framework para gerenciamento de estados globais que serve para qualquer tipo de aplicação com multiplos arquivos, não apenas para projetos de front-end. Após a implementação, os dados os quais deseja-se que sejam d caráter global, assim como as lógicas necessárias para se acessar e alterar esses dados, são embuidos uma camada de processamento separada, paralela à de execução da aplicação, criando assim uma fonte única de informações acessível ao projeto como um todo. No caso de um projeto de React, isso consiste em permitir que qualquer componente, seja pequeno ou grande, tenha acesso a estados que armazenem dados ou transmitam ações para outros componentes isolados, resolvendo dessa forma o problema da hierarquia na aplicação.
+
+Em complemento a isso, a lógica do Redux não se limita um único padrão de implementação, possibilitando diversas alternativas, incluindo abordagens extremamente modulares que permitem separar as funcionalidades da aplicação ao mesmo tempo que elas continuam acessíveis ao projeto como um todo.
+
+```bash
+npm install --save react-redux
+```
+
+O exeplo abaixo demonstra uma dessas formas modulares de se implementar o Redux a um projeto de React:
+
+```
+/pages
++-- /page1
+|   +-- index.tsx
++-- index.tsx
+/store
++-- /modules
+|   +-- /func1
+|       +-- actions.ts
+|       +-- interface.ts
+|       +-- reducer.ts
+|       +-- selector.ts
+```
+
+A base de uma funcionalidade de Redux se resume a 3 componentes distintos: *states*, *reducers* e *actions*. Um *state* é a estrutura que contém qualquer dado que faça parte da lógica da funcionalidade, sendo em geral uma lista ou um objeto. Como uma de suas premissas básicas, o Redux deve atuar como uma fonte única da verdade à aplicação e, portanto, todo e qualquer *state* definido deve ser imutável, o que em outras palavras significa que os *states* nunca devem ser alterados diretamente, apenas substituídos por novos *states*. Já um *reducer* consiste em uma função cuja tarefa é realizar alterações no *state* correspondente de acordo com as especificações de uma *action*, que por sua vez nada mais é do que um objeto que deve conter um elemento "type" para indicar o tipo de alteração que o *state* deve sofrer pela ação do *reducer* e, opcionalmente, um elemento "payload" para caso tais alterações necessitem de dados extras ou novos dados. *Actions* podem ser passadas manulamente para os *reducers*, porém é mais prático definir funções, normalmente denominadas de *creators*, que apenas montem os objetos nos formatos certos e repassem os dados de payload caso sejam necessários.
+
+```typescript
+// /store/modules/func1/interface.ts
+
+import { types } from "./actions";
+
+export type TState = {
+    count: number;
+    step: number;
+}
+
+export type TAction<TType, TPayload = void> = {
+    type: TType;
+    payload: TPayload;
+}
+
+export type TActions =
+    | TAction<
+        types.ADD
+        | types.SUB
+        | types.RESET
+    >
+    | TAction<types.SET_STEP, number>;
+```
+
+```typescript
+// /store/modules/func1/actions.ts
+
+import { TAction } from "./interface";
+
+export enum types {
+    ADD = "func1/add",
+    SUB = "func1/sub",
+    RESET = "func1/reset",
+    SET_STEP = "func1/set/step"
+}
+
+export const addCount = (): TAction<types.ADD> => ({ type: types.ADD });
+
+export const subCount = (): TAction<types.SUB> => ({ type: types.SUB });
+
+export const resetCount = (): TAction<types.RESET> => ({ type: types.RESET });
+
+export const setStepCount = (newStep: number): TAction<types.SET_STEP, number> => ({
+    type: types.SET_STEP,
+    payload: newStep
+});
+```
+
+```typescript
+// /store/modules/func1/reducer.ts
+
+import { types } from "./actions";
+import { TState, TActions } from "./interface";
+
+const initialState: TState = {
+    count: 0,
+    step: 1,
+};
+
+const reducer = (state = initialState, action: TActions): TState => {
+    switch(action.type) {
+        case types.ADD:
+            return {
+                ...state,
+                count: state.count + state.step
+            };
+        case types.SUB:
+            return {
+                ...state,
+                count: state.count - state.step
+            };
+        case types.SET_STEP:
+            return {
+                ...state,
+                step: action.payload
+            };
+        case types.RESET:
+            return { ...initialState };
+        default:
+            return { ...state };
+    }
+}
+
+export default reducer;
+```
+
+
+
+```typescript
+// pages
+
+import { FC, ReactElement } from "react";
+import { Provider } from "react-redux";
+
+import { getCount } from "../store/modules.js"
+```
