@@ -486,7 +486,7 @@ Em complemento a isso, a lógica do Redux não se limita um único padrão de im
 npm install --save react-redux
 ```
 
-O exeplo abaixo demonstra uma dessas formas modulares de se implementar o Redux a um projeto de React:
+O exemplo abaixo demonstra uma dessas formas modulares de se implementar o Redux a um projeto de React:
 
 ```
 /pages
