@@ -192,7 +192,7 @@ Até este momento, definimos todas as regras de integridade e estética nas quai
 }
 ```
 
-O que por si só já elimina a necessidade de ter que encontrar os erros. Porém, a alternativa mais eficiente seria configurar o próprio editor de código para realizar não só a validação, mas também a correções quando possível, do código toda vez que algum arquivo é salvo.
+O que por si só já elimina a necessidade de ter que encontrar os erros. Porém, a alternativa mais eficiente seria configurar o próprio editor de código para realizar não só a validação, mas também a correção quando possível, do código toda vez que algum arquivo é salvo.
 
 Para isso, cria-se primeiro um arquivo **.editorconfig** na raíz do projeto com as seguintes configurações:
 
@@ -208,7 +208,7 @@ trim_trailing_whitespace = true
 insert_final_newline = true
 ```
 
-E caso o seu editor seja o VS Code, adicione um arquivo **.vscode/settings.json** com o mostrado abaixo:
+E caso o seu editor seja o VS Code, lembre de instalar as extensões do **Eslint** e do **Prettier** adicione um arquivo **.vscode/settings.json** com o mostrado abaixo:
 
 ```json
 {
@@ -486,7 +486,7 @@ Em complemento a isso, a lógica do Redux não se limita um único padrão de im
 npm install --save react-redux
 ```
 
-O exeplo abaixo demonstra uma dessas formas modulares de se implementar o Redux a um projeto de React:
+O exeplo abaixo demonstra uma dessas formas modulares de se implementar o Redux a um projeto de React. A funcionalidade escolhida foi a de um contador com valor ajustável de acréscimo e será reutilizada posteriormente nas próximas seções.
 
 ```
 /pages
@@ -500,6 +500,9 @@ O exeplo abaixo demonstra uma dessas formas modulares de se implementar o Redux 
 |       +-- interface.ts
 |       +-- reducer.ts
 |       +-- selector.ts
+|   +-- index.ts
+|   +-- interface.ts
++-- index.ts
 ```
 
 A base de uma funcionalidade de Redux se resume a 3 componentes distintos: *states*, *reducers* e *actions*. Um *state* é a estrutura que contém qualquer dado que faça parte da lógica da funcionalidade, sendo em geral uma lista ou um objeto. Como uma de suas premissas básicas, o Redux deve atuar como uma fonte única da verdade à aplicação e, portanto, todo e qualquer *state* definido deve ser imutável, o que em outras palavras significa que os *states* nunca devem ser alterados diretamente, apenas substituídos por novos *states*. Já um *reducer* consiste em uma função cuja tarefa é realizar alterações no *state* correspondente de acordo com as especificações de uma *action*, que por sua vez nada mais é do que um objeto que deve conter um elemento "type" para indicar o tipo de alteração que o *state* deve sofrer pela ação do *reducer* e, opcionalmente, um elemento "payload" para caso tais alterações necessitem de dados extras ou novos dados. *Actions* podem ser passadas manulamente para os *reducers*, porém é mais prático definir funções, normalmente denominadas de *creators*, que apenas montem os objetos nos formatos certos e repassem os dados de payload caso sejam necessários.
@@ -508,18 +511,14 @@ A base de uma funcionalidade de Redux se resume a 3 componentes distintos: *stat
 // /store/modules/func1/interface.ts
 
 import { types } from "./actions";
+import { TAction } from "../interface";
 
-export type TState = {
+export type TFunc1State = {
     count: number;
     step: number;
 }
 
-export type TAction<TType, TPayload = void> = {
-    type: TType;
-    payload: TPayload;
-}
-
-export type TActions =
+export type TFunc1Actions =
     | TAction<
         types.ADD
         | types.SUB
@@ -531,7 +530,7 @@ export type TActions =
 ```typescript
 // /store/modules/func1/actions.ts
 
-import { TAction } from "./interface";
+import { TAction } from "../interface";
 
 export enum types {
     ADD = "func1/add",
@@ -556,14 +555,14 @@ export const setStepCount = (newStep: number): TAction<types.SET_STEP, number> =
 // /store/modules/func1/reducer.ts
 
 import { types } from "./actions";
-import { TState, TActions } from "./interface";
+import { TFunc1State, TFunc1Actions } from "./interface";
 
 const initialState: TState = {
     count: 0,
     step: 1,
 };
 
-const reducer = (state = initialState, action: TActions): TState => {
+const reducer = (state = initialState, action: TFunc1Actions): TState => {
     switch(action.type) {
         case types.ADD:
             return {
@@ -590,13 +589,102 @@ const reducer = (state = initialState, action: TActions): TState => {
 export default reducer;
 ```
 
-
+A lógica da funcionalidade em si já está contida nesses três arquivos acima. O arquivo **actions.ts** define os tipos de ações que podem ser efetuadas, no caso somar ou subtrair o valor de *step* uma vez do valor da contagem, definir o valor do *step* e reiniciar o *state* da funcionalidade para os valores iniciais, assim como também declara os *creators* que facilitarão o envio das *actions* para o *reducer*. O arquivo **reducer.ts**, por sua vez, declara o valor inicial do *state* e define as operações respectivas a cada tipo de *action* e, por fim, o arquivo **interface.ts** ajuda a organizar as estruturas envolvidas na funcionalidade.
 
 ```typescript
-// pages
+// /store/modules/index.ts
+
+import { combineReducers } from "redux";
+
+import func1 from "./func1/reducer";
+
+const rootReducer = combineReducers({
+    func1,
+});
+
+export default rootReducer;
+```
+
+```typescript
+// /store/modules/interface.ts
+
+import { Action } from "redux";
+
+import rootReducer from "./";
+
+import { TFunc1Actions } from "./func1/interface";
+
+export type TStore = ReturnType<typeof rootReducer>;
+
+export type TActions = TFunc1Actions;
+
+export type TAction<TType, TPayload = void> = {
+    type: TType;
+    payload: TPayload;
+}
+```
+
+```typescript
+// /store/index.ts
+
+import { createStore } from "redux";
+
+import rootReducer from "./modules";
+import { TActions, TStore } from "./modules/interface";
+
+const appReducer = (state: TStore, action: TAction) => rootReducer(state, action);
+
+export default createStore(appReducer);
+```
+
+```typescript
+// /pages/index.tsx
 
 import { FC, ReactElement } from "react";
 import { Provider } from "react-redux";
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route,
+} from "react-router-dom";
 
-import { getCount } from "../store/modules.js"
+import store from "../store";
+
+import Page1 from "./page1";
+
+const App: FC = ():ReactElement => {
+    return (
+        <Provider store={store}>
+            <Router>
+                <Switch>
+                    <Route path="/" exact component={Page1} />
+                </Switch>
+            </Router>
+        </Provider>
+    );
+}
+```
+
+```typescript
+// /store/modules/func1/selectors.ts
+
+import { TFunc1State } from "./interface";
+import { TStore } from "../interface";
+
+export const getState = (state: TStore): TFunc1State => state?.func1 ?? {};
+```
+
+```typescript
+// /pages/page1/index.tsx
+
+import { FC, ReactElement } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
+import {
+    addCount,
+    subCount,
+    resetCount,
+    setStepCount,
+} from "../store/modules/func1/actions";
+import {  }
 ```
