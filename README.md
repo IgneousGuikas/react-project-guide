@@ -1,6 +1,6 @@
 # Guia para criação de projetos de react
 
-Este projeto tem como objetivo apresentar um passo a passo simples e direto de como criar e configurar um ambiente react que possua todos os principais recursos necessários para desenvolvimento de um projeto, seja grande ou pequeno.
+Neste universo de desenvolvimento frontend, existe uma gama consideravelmente grande de caminhos a se tomar e de ferramentas a se escolher de modo a dar início a projeto. Somente em questão de frameworks para se trabalhar já são dezenas deles presentes no mercado, cada uma com as suas vantagens, desvantagens e particularidades, sem contar também as diversas bibliotecas auxiliares que a internet tem a oferecer para preencher as lacunas de funcionalidades. Em meio a este mar de alternativas, venho com este guia não como a solução definitiva para qualquer tipo de projeto, mas como sugestão de uma estrutura para projetos que seja versátil e personalizável até certo ponto.
 
 ## Sumário
 
@@ -16,14 +16,18 @@ Este projeto tem como objetivo apresentar um passo a passo simples e direto de c
 
 ## Recursos
 
-Este projeto emprega como recursos básicos:
+Para este guia, foi escolhido o **React** como biblioteca de criação de interfaces, extremamente personalizável devido à sua lógica baseada componentes em lugar de frameworks, além de ser relativamente eficiente em comparação a outras ferramentas e de ter um acervo considerável de bibliotecas compatíveis.
+
+O grande potencial do React para devenvolvimento web se dá sobretudo pelo uso de um **DOM virtual** durante o processo de atualização da interface, o que basicamente consiste em aplicar toda e qualquer alteração que a interface possa sofre em uma versão simulada do documento real da página de HTML que está sendo exibida pelo browser, permitindo dessa forma que a interface seja re-renderizada parcialmente ao identificar as diferenças entre as versões simulada e real. Esse processo proporciona maior eficiência nas atualizações, tornando a interface mais responsíva.
+
+Quanto à parte de organização e prevenção de erros, este projeto emprega as seguintes ferramentas:
 
 * Typescript
 * Eslint
 * Prettier
-* Integração com o github
+* Github + Husky
 
-Além de uma gama de recursos adicionais, que podem ou não serem adicionados ao projeto dependendo da necessidade:
+E como adicional, as bibliotecas listadas abaixo serão abordadas de forma resumida, buscando para cada uma explicar para que serve e o porquê de ela ser uma boa alternativa:
 
 * Styled Components e Styled System
 * React Router
@@ -94,6 +98,41 @@ Por padrão, o projeto já vem com uma demo de projeto pré montada, contando im
 ```
 
 assim como uma configuração inicial de integração com o github, a qual será abordada ao final desta seção.
+
+Em termos de organização de arquivos, não há necessariamente um modelo que seja intrinsecamente melhor do que outro, afinal, modelo bom é aquele que funciona. Particulamente, gosto de organizar meus projetos na estrutura a seguir:
+
+```
+/project-name
++-- /public
+|   +-- /fonts      (arquivos de fontes de texto)
+|   +-- /icons      (arquivos de ícones)
+|   +-- /images     (arquivos de imagens)
+|   +-- index.html
++-- /src
+|   +-- /config     (qualquer arquivo de configuração de api)
+|   +-- /components (componentes de react compartilhados)
+|   +-- /constants  (variáveis contantes compartilhadas)
+|   +-- /contexts   (contextos de react)
+|   +-- /helpers    (funções facilitadores)
+|   +-- /hooks      (funções hook de react personalizadas)
+|   +-- /routes     (organização de rotas caso existam no projeto)
+|   +-- /schemas    (schemas de formulários)
+|   +-- /screens    (componetes de react das páginas da aplicação)
+|   +-- /store      (toda a configuração do Redux ou outra biblioteca de storage)
+|   +-- /theme      (tudo relacionado aos estilos do projeto)
+```
+
+Além disso, acho mais conveniente definir os scripts do projeto desta forma:
+
+```json
+{
+    "scripts": {
+        "dev": "react-scripts start",
+        "build": "react-scripts build",
+        "start": "react-scripts build && serve -l 3000 build",
+    }
+}
+```
 
 Como ajuste inicial, mova as dependências de typescript para a seção de dependências de desenvolvedor, dado que o objetivo desses recursos é auxiliar o processo de desenvolvimento por meio da verificação estática de tipos:
 
@@ -249,7 +288,29 @@ git branch -M master
 git push -u origin master
 ```
 
-O repositório será então preenchido pelo conteúdo do seu repositório local e você jã pode começar a personalizar o seu projeto. Como complemento, utilize o arquivo **.gitignore** para definir quais os arquivos e diretórios no projeto não devem ser considerados pelo github e o arquivo **.gitattributes** para definir quais propriedades o github deverá implementar nos arquivos do projeto.
+O repositório será então preenchido pelo conteúdo do seu repositório local e você já pode começar a personalizar o seu projeto. Utilize o arquivo **.gitignore** para definir quais os arquivos e diretórios no projeto não devem ser considerados pelo github e o arquivo **.gitattributes** para definir quais propriedades o github deverá implementar nos arquivos do projeto.
+
+Como complemento, as configurações do Eslint e do Prettier mostradas acima certamente ajudam a manter a integridade do código durante o processo de desenvolvimento, mas ainda assim não são capazes de evitar certos problemas como esquecer de executar os scripts de **format** e de **lint** antes de subir alguma alteração para o github, de modo que seria conveniente configurar o projeto para realizar esse processo toda vez que um commit é registrado. A biblioteca **Husky** será a utilizada para realizar isso, basta instalá-la como uma dependência de desenvolvedor no projeto e adicionar as seguintes linhas no arquivo **package.json**:
+
+```bash
+npm install --save-dev husky
+```
+
+```json
+{
+    "husky": {
+        "hooks": {
+            "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+            "pre-commit": "npm run lint"
+        }
+    },
+    "lint-staged": {
+        "*.{js,jsx,ts,tsx}": "eslint"
+    }
+}
+```
+
+Isso fará com que o projeto seja automaticamente avaliado pelo linter antes do commit do github ser registrado e, caso algum erro seja encontrado, cancele esse registro. Além disso, essa configuração ajuda também a padronizar os nomes dos commits.
 
 ## Integração com Styled Components e Styled System
 
