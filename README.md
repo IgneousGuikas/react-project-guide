@@ -25,7 +25,7 @@ Quanto à parte de organização e prevenção de erros, este projeto emprega as
 * Typescript
 * Eslint
 * Prettier
-* Github + Husky
+* Github + Husky + Commitlint
 
 E como adicional, as bibliotecas listadas abaixo serão abordadas de forma resumida, buscando para cada uma explicar para que serve e o porquê de ela ser uma boa alternativa:
 
@@ -87,6 +87,7 @@ Após o comando terminar a sua execução, um diretório novo com o nome que voc
 Por padrão, o projeto já vem com uma demo de projeto pré montada, contando imagens, ícones, manifesto da aplicação, testes de interface e algumas outras configurações. Além disso, o criador de projeto também define os scripts de desenvolvimento e de build no arquivo **package.json**:
 
 ```json
+// package.json
 {
     "scripts": {
         "start": "react-scripts start",
@@ -99,7 +100,7 @@ Por padrão, o projeto já vem com uma demo de projeto pré montada, contando im
 
 assim como uma configuração inicial de integração com o github, a qual será abordada ao final desta seção.
 
-Em termos de organização de arquivos, não há necessariamente um modelo que seja intrinsecamente melhor do que outro, afinal, modelo bom é aquele que funciona. Particulamente, gosto de organizar meus projetos na estrutura a seguir:
+Em termos de organização de arquivos, não há necessariamente um modelo que seja intrinsecamente melhor do que outro, afinal, modelo bom é aquele que funciona. Particularmente, gosto de organizar meus projetos na estrutura a seguir:
 
 ```
 /project-name
@@ -118,6 +119,7 @@ Em termos de organização de arquivos, não há necessariamente um modelo que s
 |   +-- /routes     (organização de rotas caso existam no projeto)
 |   +-- /schemas    (schemas de formulários)
 |   +-- /screens    (componetes de react das páginas da aplicação)
+|   +-- /services   (declaração das funções de requisição HTTP/WebSocket)
 |   +-- /store      (toda a configuração do Redux ou outra biblioteca de storage)
 |   +-- /theme      (tudo relacionado aos estilos do projeto)
 ```
@@ -125,6 +127,7 @@ Em termos de organização de arquivos, não há necessariamente um modelo que s
 Além disso, acho mais conveniente definir os scripts do projeto desta forma:
 
 ```json
+// package.json
 {
     "scripts": {
         "dev": "react-scripts start",
@@ -138,9 +141,15 @@ Como ajuste inicial, mova as dependências de typescript para a seção de depen
 
 ```bash
 npm install --save-dev typescript @types/jest @types/node @types/react @types/react-dom
+
+ou
+
+yarn remove typescript @types/jest @types/node @types/react @types/react-dom
+yarn add typescript @types/jest @types/node @types/react @types/react-dom -D
 ```
 
 ```json
+// package.json
 {
     "devDependencies": {
         "@types/jest": "^26.0.20",
@@ -158,17 +167,26 @@ Uma vez com o projeto criado, instale o eslint e o prettier, assim como as suas 
 
 ```bash
 npm install --save-dev eslint prettier @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-plugin-react eslint-config-prettier eslint-plugin-prettier
+
+ou
+
+yarn add eslint prettier @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-plugin-react eslint-config-prettier eslint-plugin-prettier -D
 ```
 
 Como acréscimo ao projeto, instale o plugin de react hooks do eslint para adicionar regras que ajudarão na consistência de lógicas de hooks em seus componentes:
 
 ```bash
 npm install --save-dev eslint-plugin-react-hooks
+
+ou
+
+yarn add eslint-plugin-react-hooks -D
 ```
 
 Em seguida, criei um arquivo **.eslintrc** na raíz do projeto com o que é apresentado abaixo:
 
 ```json
+// .eslintrc
 {
     "parser": "@typescript-eslint/parser",
     "extends": [
@@ -176,8 +194,8 @@ Em seguida, criei um arquivo **.eslintrc** na raíz do projeto com o que é apre
         "plugin:react/recommended",
         "plugin:react-hooks/recommended",
         "plugin:@typescript-eslint/recommended",
-        "prettier/@typescript-eslint",
-        "plugin:prettier/recommended"
+        "plugin:prettier/recommended",
+        "prettier"
     ],
     "parserOptions": {
         "ecmaVersion": 2018,
@@ -190,7 +208,8 @@ Em seguida, criei um arquivo **.eslintrc** na raíz do projeto com o que é apre
     "rules": {
         "prettier/prettier": "error",
         "react/prop-types": "off",
-        "@typescript-eslint/no-explicit-any": "error"
+        "@typescript-eslint/no-explicit-any": "off",
+        "no-case-declarations": "off"
     },
     "settings": {
         "react": {
@@ -205,6 +224,7 @@ Essas definições servem para instruir o seu editor de código sobre como valid
 Faça a mesma coisa novamente, agora com outro arquivo chamado **.prettierrc**:
 
 ```json
+// .prettierrc
 {
     "bracketSpacing": true,
     "jsxBracketSameLine": true,
@@ -214,7 +234,12 @@ Faça a mesma coisa novamente, agora com outro arquivo chamado **.prettierrc**:
 }
 ```
 
-Já essas definições servem para ajudar a manter um padrão estético em seu código, muito importante para a saúde e manutenção de um projeto.
+Já essas definições servem para ajudar a manter um padrão estético em seu código, muito importante para a saúde e manutenção de um projeto. Dependendo do seu editor de código, é uma boa ideia criar também um arquivo **.prettierignore** para evitar que o repositório das dependências do projeto seja avaliado pelo prettier:
+
+```
+// .prettierignore
+node_modules
+```
 
 ### Configurações do Editor
 
@@ -223,6 +248,7 @@ Até este momento, definimos todas as regras de integridade e estética nas quai
 É possível remediar esse problema adicionando scripts ao arquivo **package.json** que apliquem rotinas de validação em todos os arquivos:
 
 ```json
+// package.json
 {
     "scripts": {
         "format": "prettier --write src/**/*.{j,t}s{,x}",
@@ -236,6 +262,7 @@ O que por si só já elimina a necessidade de ter que encontrar os erros. Porém
 Para isso, cria-se primeiro um arquivo **.editorconfig** na raíz do projeto com as seguintes configurações:
 
 ```
+// .editorconfig
 root = true
 
 [*]
@@ -250,8 +277,8 @@ insert_final_newline = true
 E caso o seu editor seja o VS Code, lembre de instalar as extensões do **Eslint** e do **Prettier** adicione um arquivo **.vscode/settings.json** com o mostrado abaixo:
 
 ```json
+// .vscode/settings.json
 {
-    "window.zoomLevel": 1,
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true
     },
@@ -290,27 +317,52 @@ git push -u origin master
 
 O repositório será então preenchido pelo conteúdo do seu repositório local e você já pode começar a personalizar o seu projeto. Utilize o arquivo **.gitignore** para definir quais os arquivos e diretórios no projeto não devem ser considerados pelo github e o arquivo **.gitattributes** para definir quais propriedades o github deverá implementar nos arquivos do projeto.
 
-Como complemento, as configurações do Eslint e do Prettier mostradas acima certamente ajudam a manter a integridade do código durante o processo de desenvolvimento, mas ainda assim não são capazes de evitar certos problemas como esquecer de executar os scripts de **format** e de **lint** antes de subir alguma alteração para o github, de modo que seria conveniente configurar o projeto para realizar esse processo toda vez que um commit é registrado. A biblioteca **Husky** será a utilizada para realizar isso, basta instalá-la como uma dependência de desenvolvedor no projeto e adicionar as seguintes linhas no arquivo **package.json**:
+Como complemento, as configurações do Eslint e do Prettier mostradas acima certamente ajudam a manter a integridade do código durante o processo de desenvolvimento, mas ainda assim não são capazes de evitar certos problemas como esquecer de executar os scripts de **format** e de **lint** antes de subir alguma alteração para o github, de modo que seria conveniente configurar o projeto para realizar esse processo toda vez que um commit é registrado. A biblioteca **Husky** será a utilizada para realizar isso. Primeiramente, instale a biblioteca como uma dependência de desenvolvedor e inicialize ela no projeto:
 
 ```bash
 npm install --save-dev husky
+npx husky init
+
+ou
+
+yarn add husky -D
+npx husky init
 ```
 
+O arquivo **package.json** será atualizado com algumas configurações adicionais e uma nova pasta chamada **.husky** será criada na raíz do projeto. Essa pasta irá conter todos ganchos que você quiser declarar para serem executados antes de cada commit que você criar. Por padrão, um gancho chamado **pre-commit** já virá definido, o qual deve ser modificado para realizar o processo de verificação do eslint antes do commit ser processado e, caso haja algum erro problemático, cancelar esse mesmo commit:
+
+```
+// .husky/pre-commit
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+npm run lint
+```
+
+Como complemento, vamos definir um gancho adicional a esse processo para incentivar uma padronização das mensagens atribuidas aos commit. Para isso, instale as bibliotecas de **commitlint** abaixo:
+
+```bash
+npm install --save-dev @commitlint/cli @commitlint/config-conventional
+
+ou
+
+yarn add @commitlint/cli @commitlint/config-conventional -D
+```
+
+Em seguida, crie um arquivo na raíz do projeto chamado **.commitlintrc.json** para integrar corretamente o commitlint ao projeto:
+
 ```json
+// .commitlintrc.json
 {
-    "husky": {
-        "hooks": {
-            "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-            "pre-commit": "npm run lint"
-        }
-    },
-    "lint-staged": {
-        "*.{js,jsx,ts,tsx}": "eslint"
-    }
+    "extends": ["@commitlint/config-conventional"]
 }
 ```
 
-Isso fará com que o projeto seja automaticamente avaliado pelo linter antes do commit do github ser registrado e, caso algum erro seja encontrado, cancele esse registro. Além disso, essa configuração ajuda também a padronizar os nomes dos commits.
+E por último, execute este comando abaixo para criar o gancho propriamente dito (lembre-se de usar aspas simples para garantir que o "$1" seja integrado corretamente ao comando):
+
+```bash
+npx husky add .husky/commit-msg 'npx commitlint --edit $1'
+```
 
 ## Integração com Styled Components e Styled System
 
@@ -319,6 +371,11 @@ Existem diversas formas diferentes de implementar estilos em componentes de Reac
 ```bash
 npm install --save styled-components
 npm install --save-dev @types/styled-components
+
+ou
+
+yarn add styled-components
+yarn add @types/styled-components -D
 ```
 
 O exemplo abaixo demonstra alguns dos recursos que essa biblioteca tem a oferecer:
@@ -326,16 +383,18 @@ O exemplo abaixo demonstra alguns dos recursos que essa biblioteca tem a oferece
 ```typescript
 import React, { FC, ReactElement } from "react";
 
-import styled, { css, ThemeProvider, CSSProperties } from "styled-components";
+import styled, { css, DefaultTheme, ThemeProvider, CSSProperties } from "styled-components";
 
-interface DefaultTheme {
-    breakpoints: number[];
-    variants: Record<string,{
-        color: string;
-        border: string;
-        backgroundColor: string;
-        fontSize: string;
-    }>
+declare module "styled-components" {
+    export interface DefaultTheme {
+        breakpoints: number[];
+        variants: Record<string,{
+            color: string;
+            border: string;
+            backgroundColor: string;
+            fontSize: string;
+        }>
+    }
 }
 
 enum VARIANTS {
@@ -416,6 +475,12 @@ Em complemento a essa ferramenta, existe também uma outra biblioteca chamada **
 
 ```bash
 npm install --save styled-system
+npm install --save-dev @types/styled-system
+
+ou
+
+yarn add styled-system
+yarn add @types/styled-system -D
 ```
 
 ```typescript
@@ -426,14 +491,27 @@ import { Properties } from "csstype";
 
 import {
     background,
+    BackgroundProps,
     border,
+    BorderProps,
     flexBox,
+    FlexProps,
     layout,
+    LayoutProps,
     space,
-    typography
+    LayoutProps,
+    typography,
+    TypographyProps,
 } from "styled-system";
 
-const Button = styled.button<>`
+const Button = styled.button<
+    BackgroundProps &
+    BorderProps &
+    FlexProps &
+    LayoutProps &
+    LayoutProps &
+    TypographyProps
+>`
     ${background}
     ${border}
     ${flexBox}
@@ -474,6 +552,11 @@ A biblioteca **React Router** vem com a proposta de remediar esse problema, impl
 ```bash
 npm install --save react-router-dom
 npm install --save-dev @types/react-router-dom
+
+ou
+
+yarn add react-router-dom
+yarn add @types/react-router-dom -D
 ```
 
 ```typescript
@@ -529,6 +612,70 @@ const App: FC = ():ReactElement => {
 }
 ```
 
+Como sugestão de organização, visando deixar o projeto mais dinâmico, convém agrupar as declarações de rotas em uma lista e iterar por ela na hora de declarar o Router:
+
+```typescript
+const Home: FC = (): ReactElement => {
+    return <h2>Home</h2>;
+}
+const Page1: FC = (): ReactElement => {
+    return <h2>Page 1</h2>;
+}
+const Page2: FC = (): ReactElement => {
+    return <h2>Page 2</h2>;
+}
+
+
+export enum routes {
+    HOME = "/",
+    PAGE1 = "/pages1",
+    PAGE2 = "/pages2",
+}
+
+
+export const routeProps = {
+    [routes.HOME]: {
+        key: 1,
+        path: routes.HOME,
+        exact: true,
+        component: Home,
+    },
+    [routes.PAGE1]: {
+        key: 2,
+        path: routes.PAGE1,
+        exact: true,
+        component: Page1,
+    },
+    [routes.PAGE2]: {
+        key: 3,
+        path: routes.PAGE2,
+        exact: true,
+        component: Page2,
+    },
+};
+
+
+function renderRoutes(): ReactElement[] {
+    const temp = [];
+    let route: routes;
+    for (route in routeProps) {
+        temp.push(<Route {...routeProps[route]} />);
+    }
+    return temp;
+}
+
+const Routes: FC = (): ReactElement => {
+    return (
+        <Router>
+            <Switch>
+                {renderRoutes()}
+                <Redirect to={routes.HOME} />
+            </Switch>
+        </Router>
+    );
+};
+```
+
 ## Integração com Redux, Redux-Thunk e Redux-Persist
 
 Dentre os vários desafios que um projeto de React acarreta, gerenciamento de estados é certamente um dos que abrange uma grande gama de possibilidades, envolvendo diversos métodos, diversos conceitos e diversas ferramentas.
@@ -541,10 +688,16 @@ Tendo tudo isso em mente, a biblioteca tratada por esta seção, **Redux**, assi
 
 Trata-se de um framework para gerenciamento de estados globais que serve para qualquer tipo de aplicação com multiplos arquivos, não apenas para projetos de front-end. Após a implementação, os dados os quais deseja-se que sejam d caráter global, assim como as lógicas necessárias para se acessar e alterar esses dados, são embuidos uma camada de processamento separada, paralela à de execução da aplicação, criando assim uma fonte única de informações acessível ao projeto como um todo. No caso de um projeto de React, isso consiste em permitir que qualquer componente, seja pequeno ou grande, tenha acesso a estados que armazenem dados ou transmitam ações para outros componentes isolados, resolvendo dessa forma o problema da hierarquia na aplicação.
 
-Em complemento a isso, a lógica do Redux não se limita um único padrão de implementação, possibilitando diversas alternativas, incluindo abordagens extremamente modulares que permitem separar as funcionalidades da aplicação ao mesmo tempo que elas continuam acessíveis ao projeto como um todo.
+Em complemento a isso, a lógica do Redux não se limita a um único padrão de implementação, possibilitando diversas alternativas, incluindo abordagens extremamente modulares que permitem separar as funcionalidades da aplicação ao mesmo tempo que elas continuam acessíveis ao projeto como um todo.
 
 ```bash
 npm install --save react-redux
+npm install --save-dev @types/react-redux
+
+ou
+
+yarn add react-redux
+yarn add @types/react-redux -D
 ```
 
 O exeplo abaixo demonstra uma dessas formas modulares de se implementar o Redux a um projeto de React. A funcionalidade escolhida foi a de um contador com valor ajustável de acréscimo e será reutilizada posteriormente nas próximas seções.
@@ -566,10 +719,18 @@ O exeplo abaixo demonstra uma dessas formas modulares de se implementar o Redux 
 +-- index.ts
 ```
 
-A base de uma funcionalidade de Redux se resume a 3 componentes distintos: *states*, *reducers* e *actions*. Um *state* é a estrutura que contém qualquer dado que faça parte da lógica da funcionalidade, sendo em geral uma lista ou um objeto. Como uma de suas premissas básicas, o Redux deve atuar como uma fonte única da verdade à aplicação e, portanto, todo e qualquer *state* definido deve ser imutável, o que em outras palavras significa que os *states* nunca devem ser alterados diretamente, apenas substituídos por novos *states*. Já um *reducer* consiste em uma função cuja tarefa é realizar alterações no *state* correspondente de acordo com as especificações de uma *action*, que por sua vez nada mais é do que um objeto que deve conter um elemento "type" para indicar o tipo de alteração que o *state* deve sofrer pela ação do *reducer* e, opcionalmente, um elemento "payload" para caso tais alterações necessitem de dados extras ou novos dados. *Actions* podem ser passadas manulamente para os *reducers*, porém é mais prático definir funções, normalmente denominadas de *creators*, que apenas montem os objetos nos formatos certos e repassem os dados de payload caso sejam necessários.
+A base de uma funcionalidade de Redux se resume a 3 componentes distintos: *states*, *reducers* e *actions*.
+
+- Um *state* é a estrutura que contém qualquer dado que faça parte da lógica da funcionalidade, sendo em geral uma lista ou um objeto. Como uma de suas premissas básicas, o Redux deve atuar como uma fonte única verdadeira dos dados aplicação e, portanto, todo e qualquer *state* definido deve ser imutável, o que em outras palavras significa que os *states* nunca devem ser alterados diretamente, apenas substituídos por novos *states*.
+
+- *Actions*, por sua vez, são objetos que transportam instruções para as atualizações dos *states*, contendo sempre um elemento "type", normalmente uma string pré-definida que indique de qual ação que se trata, e opcionalmente um elemento "payload", podendo assumir qualquer valor que seja necessário para atualizar o *state* durante a *action* especificada. *Actions* podem ser despachadas explicitamente no projeto ou então por meio de funções criadoras de *actions*, denominadas *creators*.
+
+- Por último, *reducers* são funções que constituem o corpo principal do Redux, uma vez que são responsáveis por receber as instruções das *actions* e atualizar os *states* de acordo com essas instruções. É comum que o conteúdo de um *reducer* não passe de um grande switch-case que percorra os "types" das actions e, a cada caso, retorne uma cópia do do seu *state* alterado de alguma forma.
+
+Em complemento a essa estrutura, muitas vezes declaram-se funções auxiliares chamadas *selectors* para facilitar a seleção de valores ou objetos específicos de dentro de um *state* para serem utilizados na lógica do projeto.
 
 ```typescript
-// /store/modules/func1/interface.ts
+// store/modules/func1/interface.ts
 
 import { types } from "./actions";
 import { TAction } from "../interface";
@@ -589,7 +750,7 @@ export type TFunc1Actions =
 ```
 
 ```typescript
-// /store/modules/func1/actions.ts
+// store/modules/func1/actions.ts
 
 import { TAction } from "../interface";
 
@@ -613,7 +774,7 @@ export const setStepCount = (newStep: number): TAction<types.SET_STEP, number> =
 ```
 
 ```typescript
-// /store/modules/func1/reducer.ts
+// store/modules/func1/reducer.ts
 
 import { types } from "./actions";
 import { TFunc1State, TFunc1Actions } from "./interface";
@@ -643,17 +804,27 @@ const reducer = (state = initialState, action: TFunc1Actions): TState => {
         case types.RESET:
             return { ...initialState };
         default:
-            return { ...state };
+            return state;
     }
 }
 
 export default reducer;
 ```
 
-A lógica da funcionalidade em si já está contida nesses três arquivos acima. O arquivo **actions.ts** define os tipos de ações que podem ser efetuadas, no caso somar ou subtrair o valor de *step* uma vez do valor da contagem, definir o valor do *step* e reiniciar o *state* da funcionalidade para os valores iniciais, assim como também declara os *creators* que facilitarão o envio das *actions* para o *reducer*. O arquivo **reducer.ts**, por sua vez, declara o valor inicial do *state* e define as operações respectivas a cada tipo de *action* e, por fim, o arquivo **interface.ts** ajuda a organizar as estruturas envolvidas na funcionalidade.
+```typescript
+// store/modules/func1/selectors.ts
+
+import { TFunc1State } from "./interface";
+import { TStore } from "../interface";
+
+export const getCount = (state: TStore): TFunc1State["count"] => state?.func1.count ?? 0;
+export const getStep = (state: TStore): TFunc1State["step"] => state?.func1.step ?? 1;
+```
+
+A lógica da funcionalidade em si já está contida nesses quatro arquivos acima. O arquivo **actions.ts** define os tipos de ações que podem ser efetuadas, no caso somar ou subtrair o valor de *step* uma vez do valor da contagem, definir o valor do *step* e reiniciar o *state* da funcionalidade para os valores iniciais, assim como também declara os *creators* que facilitarão o envio das *actions* para o *reducer*. O arquivo **reducer.ts**, por sua vez, declara o valor inicial do *state* e define as operações respectivas a cada tipo de *action*. O arquivo **interface.ts** ajuda a organizar as estruturas envolvidas na funcionalidade e, por fim, o arquivo **selectors.ts** declara funções para puxar de forma mais fácil a contagem e o valor de *step* do *state*.
 
 ```typescript
-// /store/modules/index.ts
+// store/modules/index.ts
 
 import { combineReducers } from "redux";
 
@@ -667,7 +838,7 @@ export default rootReducer;
 ```
 
 ```typescript
-// /store/modules/interface.ts
+// store/modules/interface.ts
 
 import { Action } from "redux";
 
@@ -686,7 +857,7 @@ export type TAction<TType, TPayload = void> = {
 ```
 
 ```typescript
-// /store/index.ts
+// store/index.ts
 
 import { createStore } from "redux";
 
@@ -699,7 +870,7 @@ export default createStore(appReducer);
 ```
 
 ```typescript
-// /pages/index.tsx
+// pages/index.tsx
 
 import { FC, ReactElement } from "react";
 import { Provider } from "react-redux";
@@ -727,16 +898,7 @@ const App: FC = ():ReactElement => {
 ```
 
 ```typescript
-// /store/modules/func1/selectors.ts
-
-import { TFunc1State } from "./interface";
-import { TStore } from "../interface";
-
-export const getState = (state: TStore): TFunc1State => state?.func1 ?? {};
-```
-
-```typescript
-// /pages/page1/index.tsx
+// pages/page1/index.tsx
 
 import { FC, ReactElement } from "react";
 import { useDispatch, useSelector } from "react-redux";
