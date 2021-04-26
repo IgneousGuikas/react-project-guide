@@ -188,38 +188,73 @@ Em seguida, criei um arquivo **.eslintrc** na raíz do projeto com o que é apre
 ```json
 // .eslintrc
 {
-    "parser": "@typescript-eslint/parser",
+    "env": {
+        "browser": true,
+        "es6": true,
+        "node": true
+    },
     "extends": [
         "eslint:recommended",
-        "plugin:react/recommended",
         "plugin:react-hooks/recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:prettier/recommended",
-        "prettier"
+        "plugin:react/recommended"
     ],
+    "globals": {
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly"
+    },
     "parserOptions": {
-        "ecmaVersion": 2018,
-        "sourceType": "module",
         "ecmaFeatures": {
             "jsx": true
         },
-        "project": "./tsconfig.json"
+        "ecmaVersion": 2018,
+        "sourceType": "module"
     },
+    "plugins": ["react", "react-hooks"],
     "rules": {
-        "prettier/prettier": "error",
-        "react/prop-types": "off",
-        "@typescript-eslint/no-explicit-any": "off",
-        "no-case-declarations": "off"
+        "react-hooks/exhaustive-deps": "warn",
+        "react-hooks/rules-of-hooks": "error",
+        "react/prop-types": 0,
+        "no-unused-vars": "warn",
+        "react/display-name": "warn"
     },
-    "settings": {
-        "react": {
-          "version": "detect"
+    "overrides": [
+        {
+            "files": ["**/*.ts", "**/*.tsx"],
+            "parser": "@typescript-eslint/parser",
+            "extends": [
+                "eslint:recommended",
+                "plugin:react/recommended",
+                "plugin:react-hooks/recommended",
+                "plugin:@typescript-eslint/recommended",
+                "plugin:prettier/recommended",
+                "prettier"
+            ],
+            "parserOptions": {
+                "ecmaVersion": 2018,
+                "sourceType": "module",
+                "ecmaFeatures": {
+                    "jsx": true
+                },
+                "project": "./tsconfig.json"
+            },
+            "rules": {
+                "prettier/prettier": "error",
+                "react/prop-types": "off",
+                "@typescript-eslint/no-explicit-any": "off",
+                "react/react-in-jsx-scope": "off",
+                "no-case-declarations": "off"
+            },
+            "settings": {
+                "react": {
+                "version": "detect"
+                }
+            }
         }
-    }
+    ]
 }
 ```
 
-Essas definições servem para instruir o seu editor de código sobre como validar o seu projeto, ajudando a evitar erros de digitação, erros de lógica ou então más práticas de programação.
+Essas definições servem para instruir o seu editor de código sobre como validar o seu projeto, ajudando a evitar erros de digitação, erros de lógica ou então más práticas de programação. As configurações empregadas dentro do campo "overrides" limita a validação do typescript exclusivamente para arquivos de typescript, permitindo que tanto essses quanto arquivos de javascript sejam empregados no projeto.
 
 Faça a mesma coisa novamente, agora com outro arquivo chamado **.prettierrc**:
 
@@ -321,22 +356,18 @@ Como complemento, as configurações do Eslint e do Prettier mostradas acima cer
 
 ```bash
 npm install --save-dev husky
-npx husky init
+npx husky install
 
 ou
 
 yarn add husky -D
-npx husky init
+npx husky install
 ```
 
-O arquivo **package.json** será atualizado com algumas configurações adicionais e uma nova pasta chamada **.husky** será criada na raíz do projeto. Essa pasta irá conter todos ganchos que você quiser declarar para serem executados antes de cada commit que você criar. Por padrão, um gancho chamado **pre-commit** já virá definido, o qual deve ser modificado para realizar o processo de verificação do eslint antes do commit ser processado e, caso haja algum erro problemático, cancelar esse mesmo commit:
+Uma nova pasta chamada **.husky** será criada na raíz do projeto. Essa pasta irá conter todos ganchos que você quiser declarar para serem executados antes de cada commit que você criar. O primeiro que eu indicaria seria um a ser executado antes do commit ser criado, empregando a validação do eslint sobre o projeto todo para garantir que não há erros claros de código e, caso de fato exista algum, o commit é cancelado preventivamente:
 
-```
-// .husky/pre-commit
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-npm run lint
+```bash
+npx husky .husky/pre-commit 'npm run lint'
 ```
 
 Como complemento, vamos definir um gancho adicional a esse processo para incentivar uma padronização das mensagens atribuidas aos commit. Para isso, instale as bibliotecas de **commitlint** abaixo:
